@@ -22,14 +22,13 @@ namespace Domain
             Data.ConnectionSettings.Instance = new Data.ConnectionSettings
             {
                 ConnectionString = Configuration.GetConnectionString("Default")
-            }; 
+            };
 
-            //Redis = ConnectionMultiplexer.Connect(new ConfigurationOptions
-            //{
-            //    EndPoints = { { Configuration.GetSection("Redis")["Endpoint"] } },
-            //    Password = Configuration.GetSection("Redis")["Password"]
-            //});
-            //var server = Redis.GetServer(Redis.GetEndPoints().First());
+            Redis = ConnectionMultiplexer.Connect(new ConfigurationOptions
+            {
+                EndPoints = { { Configuration.GetSection("Redis")["Endpoint"] } },
+                Password = Configuration.GetSection("Redis")["Password"]
+            });
         }
     }
 }
