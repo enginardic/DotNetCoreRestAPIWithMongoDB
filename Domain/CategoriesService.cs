@@ -4,7 +4,7 @@ using System;
 
 namespace Domain
 {
-    public class CategoriesHandler : IDomainService
+    public class CategoriesService : IDomainService
     {
         private readonly CategoryRepository categoryRepository = new CategoryRepository();
 
