@@ -1,9 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
+﻿using Domain;
+using Domain.Models;
+using Microsoft.AspNetCore.Mvc;
+using StackExchange.Redis;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace WebAPI.Controllers
 {
@@ -11,29 +10,67 @@ namespace WebAPI.Controllers
     [Route("api/[controller]")]
     public class ProductsController : ControllerBase
     {
-        private static readonly string[] Summaries = new[]
-        {
-            "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-        };
+        private readonly IConnectionMultiplexer redis;
 
-        private readonly ILogger<ProductsController> _logger;
+        private readonly ProductsService productsService;
 
-        public ProductsController(ILogger<ProductsController> logger)
+        public ProductsController(ProductsService productsService, IConnectionMultiplexer redis)
         {
-            _logger = logger;
+            this.productsService = productsService;
+            this.redis = redis;
         }
 
-        [HttpGet]
-        public IEnumerable<WeatherForecast> Get()
+
+        [HttpGet("{id:length(24)}")]
+        public ActionResult<ProductModel> Get(string id)
         {
-            var rng = new Random();
-            return Enumerable.Range(1, 5).Select(index => new WeatherForecast
-            {
-                Date = DateTime.Now.AddDays(index),
-                TemperatureC = rng.Next(-20, 55),
-                Summary = Summaries[rng.Next(Summaries.Length)]
-            })
-            .ToArray();
+            var product = productsService.Get(id, out Result result);
+
+            if (result == DefaultResults.InvalidRequest)
+                return BadRequest();
+
+            if (result == DefaultResults.NotFoundResult)
+                return NotFound();
+
+            return Ok(product);
+        }
+
+        [HttpPost]
+        public IActionResult Post(ProductModel product)
+        {
+            productsService.Add(product, out Result result);
+            if (result == DefaultResults.InvalidRequest)
+                return BadRequest();
+
+            return CreatedAtAction(nameof(Get), new { id = product.Id }, product);
+        }
+
+        [HttpPut("{id:length(24)}")]
+        public IActionResult Update(string id, [FromBody] ProductModel updatedProduct)
+        {
+            productsService.Update(id, updatedProduct, out Result result);
+
+            if (result == DefaultResults.InvalidRequest)
+                return BadRequest();
+
+            if (result == DefaultResults.NotFoundResult)
+                return NotFound();
+
+            return NoContent();
+        }
+
+        [HttpDelete("{id:length(24)}")]
+        public IActionResult Delete(string id)
+        {
+            productsService.Delete(id, out Result result);
+
+            if (result == DefaultResults.InvalidRequest)
+                return BadRequest();
+
+            if (result == DefaultResults.NotFoundResult)
+                return NotFound();
+
+            return NoContent();
         }
     }
 }
