@@ -38,8 +38,6 @@ namespace Data
         public bool Update(Expression<Func<TEntity, bool>> filter, params KeyValuePair<string, object>[] updateFields)
         {
             var updateDefinitions = updateFields.Select(i => Builders<TEntity>.Update.Set(i.Key, i.Value));
-
-            //var updateDefinitions = Builders<TEntity>.Update.Set(, "");
             var update = Builders<TEntity>.Update.Combine(updateDefinitions);
             return collection.FindOneAndUpdate(filter, update, new FindOneAndUpdateOptions<TEntity> { IsUpsert = true }) is null!;
         }
@@ -47,7 +45,6 @@ namespace Data
         public virtual void Save(TEntity entity)
         {
             if (entity.Id == ObjectId.Empty)
-                //if (string.IsNullOrEmpty(entity.Id))
                 Insert(entity);
             Update(entity);
         }
